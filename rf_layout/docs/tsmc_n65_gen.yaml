@@ -1,0 +1,120 @@
+name: tsmc_n65_gen
+description: "TSMC 65nm CMOS General Purpose Logic/MS_RF (extracted from T-N65-CL-DR-001)"
+rules:
+  # Metal Rules
+  layer_M1_min_width: 0.09
+  layer_M1_min_spacing: 0.09
+  layer_Mx_min_width: 0.1
+  layer_Mx_min_spacing: 0.1
+  layer_My_min_width: 0.2
+  layer_My_min_spacing: 0.2
+  layer_Mz_min_width: 0.4
+  layer_Mz_min_spacing: 0.4
+  layer_Mr_min_width: 0.5
+  layer_Mr_min_spacing: 0.5
+  layer_Mu_min_width: 2.0 #for CMN65 only
+  layer_Mu_min_spacing: 2.0 #for CMN65 only
+  # Via Rules
+  via_Vx_min_size: 0.10
+  via_Vx_min_spacing: 0.10
+  via_Vy_min_size: 0.2
+  via_Vy_min_spacing: 0.2
+  via_Vz_min_size: 0.36
+  via_Vz_min_spacing: 0.36
+  via_Vr_min_size: 0.46    #for wire bond
+  via_Vr_min_spacing: 0.46  #for wire bond
+  via_Vu_min_size: 0.36
+  via_Vu_min_spacing: 0.36
+  via_RV_min_size: 3    #for flip chip
+  via_RV_min_spacing: 3  #for flip chip
+  #AP-MD Rules
+  AP_MD_interconnection_width : 3
+  AP_interconnection_width: 3
+layers:
+  M1: {number: 360, datatype: 0}
+  # Mx is M2~M7, up to six layers
+  Mx: {number: 380, datatype: 0} #M2
+  Mx: {number: 381, datatype: 0}#M3
+  Mx: {number: 384, datatype: 0}#M4
+  Mx: {number: 385, datatype: 0}#M5
+  Mx: {number: 386, datatype: 0}#M6
+  Mx: {number: 387, datatype: 0}#M7
+
+  # My up to 2 layers from M5~M7
+  My: {number: 385, datatype: 20} # M5 can be defined as My, datatype =20
+  My: {number: 386, datatype: 20}#M6
+  My: {number: 387, datatype: 20}#M7
+
+  # Mz up to two layers form M3~M9
+  Mz: {number: 381, datatype: 40} #M3
+  Mz: {number: 384, datatype: 40}#M4
+  Mz: {number: 385, datatype: 40}#M5
+  Mz: {number: 386, datatype: 40}#M6
+  Mz: {number: 387, datatype: 40}#M7
+  Mz: {number: 388, datatype: 40}#M8
+  Mz: {number: 389, datatype: 40}#M9
+
+  # Mr, up to two layers from M6~M9
+  Mr: {number: 386, datatype: 80}#M6
+  Mr: {number: 387, datatype: 80}#M7
+  Mr: {number: 388, datatype: 80}#M8
+  Mr: {number: 389, datatype: 80}#M9
+
+  # Mu up to one layers from M4~M9
+  Mu: {number: 384, datatype: 0}#M4
+  Mu: {number: 385, datatype: 0}#M5
+  Mu: {number: 386, datatype: 0}#M6
+  Mu: {number: 387, datatype: 0}#M7
+  Mu: {number: 388, datatype: 0}#M8
+  Mu: {number: 389, datatype: 0}#M9
+
+  # Via definitions
+  VIA1:  {number: 378, datatype: 0}
+  #VIAx (x=2~6), up to six layers
+  VIA2:  {number: 379, datatype: 0}
+  VIA3:  {number: 373, datatype: 0}
+  VIA4:  {number: 374, datatype: 0}
+  VIA5:  {number: 375, datatype: 0}
+  VIA6: {number: 376, datatype: 0}
+
+  #VIAy (y=2~8), up to two layers
+  VIA2:  {number: 379, datatype: 20}
+  VIA3:  {number: 373, datatype: 20}
+  VIA4:  {number: 374, datatype: 20}
+  VIA5:  {number: 375, datatype: 20}
+  VIA6: {number: 376, datatype: 20}
+  VIA7: {number: 377, datatype: 20}
+  VIA8: {number: 372, datatype: 20}
+
+  #VIAz (z=2~8), up to two layers
+  VIA2:  {number: 379, datatype: 40}
+  VIA3:  {number: 373, datatype: 40}
+  VIA4:  {number: 374, datatype: 40}
+  VIA5:  {number: 375, datatype: 40}
+  VIA6: {number: 376, datatype: 40}
+  VIA7: {number: 377, datatype: 40}
+  VIA8: {number: 372, datatype: 40}
+
+   #VIAr , up to two layers
+  VIA5:  {number: 375, datatype: 80}
+  VIA6: {number: 376, datatype: 80}
+  VIA7: {number: 377, datatype: 80}
+  VIA8: {number: 372, datatype: 80}
+
+  #VIAu (z=2~8), up to one layers
+  VIA3:  {number: 373, datatype: 0}
+  VIA4:  {number: 374, datatype: 0}
+  VIA5:  {number: 375, datatype: 0}
+  VIA6: {number: 376, datatype: 0}
+  VIA7: {number: 377, datatype: 0}
+  VIA8: {number: 372, datatype: 0}
+
+  # AP and AP_MD
+  AP: {number: 307, datatype: 74}#Remark
+  AP_MD: {number: 309, datatype: 74}#Remark
+  RV: {number: 306, datatype: 0}
+
+  # Other Key Process Layers from Table 3.1.1
+  OD: {number: 120, datatype: 0} #Active Layer
+  PO: {number: 130, datatype: 0} #Poly
+  CO: {number: 156, datatype: 0} #Contact

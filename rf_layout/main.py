@@ -78,7 +78,13 @@ class RFLayout:
             comp_name = comp_data['name']
             position = comp_data['position']
             orientation = comp_data.get('orientation', 0)
+            
+            # Ensure parameters is a dictionary, default to empty dict if not present
+            # This fixes the 'float' object has no attribute 'get' error
             params = comp_data.get('parameters', {})
+            if not isinstance(params, dict):
+                print(f"Warning: parameters for {comp_name} is not a dictionary. Using default values.")
+                params = {}
             
             # Create appropriate component based on type
             component = None
@@ -278,6 +284,8 @@ def main():
         return 0
     except Exception as e:
         print(f"Error: {str(e)}")
+        import traceback
+        traceback.print_exc()  # This will print the full stack trace for better debugging
         return 1
 
 if __name__ == "__main__":
