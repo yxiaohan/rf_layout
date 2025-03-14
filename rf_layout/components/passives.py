@@ -11,6 +11,17 @@ class Inductor(Component):
     
     def __init__(self, name, position, value, turns, width, spacing, layer="metal5", orientation=0):
         super().__init__(name, position, orientation)
+        
+        # Validate parameters
+        if value <= 0:
+            raise ValueError(f"Inductor value must be positive, got {value}")
+        if turns <= 0:
+            raise ValueError(f"Number of turns must be positive, got {turns}")
+        if width <= 0:
+            raise ValueError(f"Width must be positive, got {width}")
+        if spacing <= 0:
+            raise ValueError(f"Spacing must be positive, got {spacing}")
+            
         self.value = value  # in nH
         self.turns = turns
         self.width = width  # track width
@@ -81,6 +92,15 @@ class Capacitor(Component):
     
     def __init__(self, name, position, value, width, length, top_layer="metal5", bot_layer="metal4", orientation=0):
         super().__init__(name, position, orientation)
+        
+        # Validate parameters
+        if value <= 0:
+            raise ValueError(f"Capacitor value must be positive, got {value}")
+        if width <= 0:
+            raise ValueError(f"Width must be positive, got {width}")
+        if length <= 0:
+            raise ValueError(f"Length must be positive, got {length}")
+            
         self.value = value  # in pF
         self.width = width
         self.length = length
@@ -93,8 +113,8 @@ class Capacitor(Component):
     def _calculate_ports(self):
         """Calculate port positions for the capacitor"""
         # For a simple parallel plate capacitor
-        self.ports["top"] = [0, self.length/2]
-        self.ports["bottom"] = [0, -self.length/2]
+        self.ports["port1"] = [0, self.length/2]  # Top connection (was "top")
+        self.ports["port2"] = [0, -self.length/2]  # Bottom connection (was "bottom")
     
     def generate_geometry(self):
         """Generate GDSII geometry for the capacitor"""
@@ -136,6 +156,15 @@ class Resistor(Component):
     
     def __init__(self, name, position, value, width, length, layer="poly", orientation=0):
         super().__init__(name, position, orientation)
+        
+        # Validate parameters
+        if value <= 0:
+            raise ValueError(f"Resistance value must be positive, got {value}")
+        if width <= 0:
+            raise ValueError(f"Width must be positive, got {width}")
+        if length <= 0:
+            raise ValueError(f"Length must be positive, got {length}")
+            
         self.value = value  # in Ohms
         self.width = width
         self.length = length

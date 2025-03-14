@@ -47,12 +47,12 @@ class Component(ABC):
             ])
             relative_pos = np.dot(rot_matrix, relative_pos)
         
-        # Calculate absolute position
+        # Calculate absolute position by adding the rotated relative position to component position
         return [
-            float(self.position[0] + relative_pos[0]), 
+            float(self.position[0] + relative_pos[0]),
             float(self.position[1] + relative_pos[1])
         ]
-    
+
     def get_bounding_box(self):
         """Get the bounding box of the component"""
         # Default implementation - should be overridden by complex components
