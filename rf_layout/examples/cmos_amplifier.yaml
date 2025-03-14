@@ -1,0 +1,81 @@
+---
+# CMOS Amplifier Example for RF Layout
+design:
+  name: simple_cmos_amplifier
+  technology: default_tech
+  description: "Simple CMOS amplifier with resistive load"
+  components:
+    - type: nmos
+      name: M1
+      position: [0, 0]
+      orientation: 0
+      parameters:
+        width: 10.0
+        length: 0.18
+        fingers: 4
+    
+    - type: pmos
+      name: M2
+      position: [20, 20]
+      orientation: 0
+      parameters:
+        width: 15.0
+        length: 0.18
+        fingers: 4
+    
+    - type: resistor
+      name: R1
+      position: [40, 10]
+      orientation: 90
+      parameters:
+        value: 1000
+        width: 1.0
+        length: 10.0
+        layer: poly
+    
+    - type: capacitor
+      name: C1
+      position: [60, 0]
+      orientation: 0
+      parameters:
+        value: 1.0
+        width: 10.0
+        length: 10.0
+        top_layer: metal5
+        bot_layer: metal4
+    
+    - type: inductor
+      name: L1
+      position: [80, 20]
+      orientation: 0
+      parameters:
+        value: 2.5
+        turns: 6
+        width: 2.0
+        spacing: 1.0
+        layer: metal5
+
+  connections:
+    - from: M1.drain
+      to: M2.source
+      width: 1.0
+      layer: metal1
+      routing_strategy: manhattan
+    
+    - from: M2.drain
+      to: R1.port1
+      width: 1.2
+      layer: metal2
+      routing_strategy: manhattan
+    
+    - from: R1.port2
+      to: C1.top
+      width: 1.5
+      layer: metal3
+      routing_strategy: direct
+    
+    - from: C1.bottom
+      to: L1.port1
+      width: 2.0
+      layer: metal4
+      routing_strategy: manhattan
