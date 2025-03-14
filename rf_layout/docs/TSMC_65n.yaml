@@ -1,0 +1,177 @@
+name: TSMC_CLN65_G
+description: "TSMC 65nm CMOS Logic General Purpose 1P9M"
+rules:
+  # 3.7.1 Design Geometry Restrictions
+  # G.1: Design grid must be an integer multiple of 0.005 um except PO inside SRAM (SRAMDMY_4 & SRAMDMY_5).
+  #      0.005 µm deviation is allowed for 45-degree polygon dimensions.
+  #      DRC will not flag UBM/CBD/AP-MD/CB2/PM2/PPI layers
+  # G.2: Shapes with acute angles between line segments are not allowed.
+  # G.3: Only shapes that are orthogonal or on a 45-degree angle are allowed.
+  # G.4: For the OPC layers, any edge of length < 1.0 x minimum width cannot have another
+  #      adjacent edge of length < 1.0 x minimum width.
+  # G.5: A CAD layer number must be less than, or equal to, 255.
+  # G.6g[U]: For N65:
+  #      1. Need to re-tapeout 124 mask if 112, 113, 152, or 199 GDS are changed.
+  #      2. Need to re-tapeout 14A mask if 112, 113 or 152 GDS are changed.
+  # G.7g[U]: For OD, PO, VTL_N, VTL_P, VTH_N, VTH_P, NP, PP, M1, Mx, My, all vertices and
+  #      intersections of 45-degree polygon must be on an integer multiple of 0.005 um
+  #      except PO inside SRAM (SRAMDMY_4 & SRAMDMY_5).
+
+  # 4.5.1 Deep N-Well (DNW) Layout Rules (Mask ID: 119) [Optional]
+  dwn_min_width: 3.0    # DNW.W.1
+  dwn_min_spacing: 3.5  # DNW.S.1
+  dwn_min_spacing_diff_nw: 2.5 # DNW.S.2
+  dwn_min_spacing_to_n_active_outside_dnw: 1.65 # DNW.S.3
+  dwn_min_spacing_to_pw_with_diff_potential: 1.0 # DNW.S.4, PW1V
+  dwn_min_spacing_to_od2_pwell: 1.2 #DNW.S.5, PW2V
+  dwn_min_enclosure_by_nw: 0.4  # DNW.EN.1, NW1V
+  dwn_min_n_active_enclosure: 0.56 # DNW.EN.2
+
+  # 4.5.2 Gate Oxide and Diffusion (OD) Layout Rules (Mask ID: 120)
+  od_min_width: 0.08   # OD.W.1
+  od_min_spacing: 0.11 # OD.S.1
+  od_min_area: 0.054 #OD.A.1
+  od_enclosed_min_area: 0.085 #OD.A.2
+  # 4.5.3 N-Well (NW) Layout Rules
+  nw_min_width: 0.47   # NW.W.1
+  nw_min_spacing: 0.47 # NW.S.1
+  nw_min_spacing_diff_potential: 1.0 # NW.S.2
+  nw_min_p_active_enclosure: 0.16  # NW.EN.2
+
+  # 4.5.7 Thick Oxide (OD2) Layout Rules (Mask ID: 152)
+  od2_min_width: 0.47  # OD2.W.1, OD2_18, OD2_25, OD2_33
+  od2_min_spacing: 0.47 # OD2.S.1
+  od2_min_spacing_to_active_gate: 0.15 # OD2.S.2
+  od2_min_enclosure_by_nw: 0.18 # NW.EN.3
+
+  # 4.5.11 Poly (PO) Layout Rules (Mask ID: 130)
+  po_min_width: 0.06    # PO.W.1
+  po_min_spacing: 0.12  # PO.S.1
+  po_min_gate_spacing: 0.13   # PO.S.2, core device
+  po2_min_gate_spacing: 0.25  # PO.S.3, thick oxide
+  po_min_spacing_to_od: 0.05  # PO.S.4, FIELD PO
+  po_min_extension_on_od: 0.12  # PO.EX.1
+  po_min_od_extension: 0.11 # PO.EX.2
+
+  # 4.5.26 Contact (CO) Layout Rules (Mask ID: 156)
+  co_min_width: 0.09    # CO.W.1
+  co_min_spacing: 0.1  # CO.S.1
+  co_min_spacing_diff_net: 0.12  # CO.S.2
+  co_min_spacing_3_neighboring: 0.14
+  co_min_od_enclosure: 0.045  # CO.EN.1
+  co_min_po_enclosure_2sides: 0.03 # CO.EN.2
+  co_min_po_enclosure: 0.02   # CO.EN.3
+
+  # 4.5.27 Metal-1 (M1) Layout Rules (Mask ID: 360)
+  m1_min_width: 0.09    # M1.W.1
+  m1_min_spacing: 0.09  # M1.S.1
+  m1_min_spacing_long_parallel: [ # M1.S.2
+    [0.38, 0.10]    # [parallel_run_length, min_spacing]
+  ]
+  m1_min_enclosure_of_co: 0.035 # M1.EN.1
+
+  # 4.5.28 VIAx Layout Rules (Mask ID: 378, 379, 373, 374, 375, 376)
+  viax_min_width: 0.1  # VIAx.W.1, x = 1~6
+  viax_min_spacing: 0.1 # VIAx.S.1, x = 1~6
+  viax_min_enclosure_by_mx: 0.035 # VIAx.EN.1, x = 1~6
+  viax_min_enclosure_by_mx_2sides: 0.04 # VIAx.EN.2, x = 1~6
+
+layers:
+  # 3.1 Mask Information, Key Process Sequence, and CAD Layers
+  substrate: {number: 0, datatype: 0} # GDS layer usage description file
+  nwell: {number: 1, datatype: 0}    # GDS layer usage description file
+  dwn: {number: 1, datatype: 0}    # Deep N-Well
+  od: {number: 6, datatype: 0}     # Thin oxide for device, and interconnection
+  po: {number: 17, datatype: 0}    # Poly-Si.
+  np: {number: 26, datatype: 0}    # N+ implantation
+  pp: {number: 25, datatype: 0}    # P+ implantation
+  rpo: {number: 29, datatype: 0}   # Silicide protection
+  co: {number: 30, datatype: 0}    # Contact window from M1 to OD or PO
+  m1: {number: 31, datatype: 0}    # 1st metal for interconnection
+  via1: {number: 51, datatype: 0}  # Via1 hole between M2 and M1
+  m2: {number: 32, datatype: 0}    # 2nd metal for interconnection
+  via2: {number: 52, datatype: 0}  # Via2 hole between M3 and M2
+  m3: {number: 33, datatype: 0}    # 3rd metal for interconnection
+  via3: {number: 53, datatype: 0}  # Via3 hole between M4 and M3
+  m4: {number: 34, datatype: 0}    # 4th metal for interconnection
+  via4: {number: 54, datatype: 0}  # Via4 hole between M5 and M4
+  m5: {number: 35, datatype: 0}    # 5th metal for interconnection
+  via5: {number: 55, datatype: 0}  # Via5 hole between M6 and M5
+  m6: {number: 36, datatype: 0}    # 6th metal for interconnection
+  via6: {number: 56, datatype: 0}  # Via6 hole between M7 and M6
+  m7: {number: 37, datatype: 0}    # 7th metal for interconnection
+  via7: {number: 57, datatype: 0}  # Via7 hole between M8 and M7
+  m8: {number: 38, datatype: 0}    # 8th metal for interconnection
+  via8: {number: 58, datatype: 0}  # Via8 hole between M9 and M8
+  m9: {number: 39, datatype: 0}    # 9th metal for interconnection
+  #FBEOL option1 (Wire bond without (AP Fuse or AP RDL))
+  cb: {number: 76, datatype: 0}  # Passivation-1/2 open for bond pad
+  ap: {number: 74, datatype: 0}  # Al pad
+  #FBEOL option3 (Wire bond with (AP Fuse or AP RDL))
+  cbd: {number: 169, datatype: 0} # Passivation-1 open for bond pad, AP RDL via and AP fuse trench
+  ap_md: {number: 74, datatype: 0}# Al pad, AP RDL, AP fuse
+  fw_ap: {number: 95, datatype: 20} # AP fuse window
+  cb2: {number: 86, datatype: 0}# Passivation-2 open
+  vth_n: {number: 67, datatype: 0} # High Vt NMOS implantation.
+  vth_p: {number: 68, datatype: 0} # High Vt PMOS implantation.
+  vtl_n: {number: 118, datatype: 0}# Low Vt NMOS implantation for LP only.
+  vtl_p: {number: 117, datatype: 0}# Low Vt PMOS implantation for LP only.
+  nt_n: {number: 110, datatype: 0}# Active area of low Vt native NMOSFET device
+  # 3.4 Special Recognition CAD Layer Summary
+  sealring: {number: 162, datatype: 0} # seal ring and metal fuse protection ring.
+  sram: {number: 50, datatype: 0}
+  sram_11: {number: 50, datatype: 11}
+  sram_12: {number: 50, datatype: 12}
+  sram_13: {number: 50, datatype: 13}
+  sram_14: {number: 50, datatype: 14}
+  sram_4: {number: 50, datatype: 4} #SRAM Periphery
+  sram_5: {number: 50, datatype: 5} #SRAM Periphery
+  sram_dm_4: {number: 186, datatype: 4} # for SRAM periphery
+  sram_dm_5: {number: 186, datatype: 5} # for SRAM periphery
+  sram_dm_0: {number: 186, datatype: 0}
+  sram_dm_1: {number: 186, datatype: 1}
+  co_11: {number: 30, datatype: 11} # CO in SRAM
+  ncap_ntn: {number: 11, datatype: 20} # for varactor
+  nwdmy: {number: 114, datatype: 0} # Two kinds of NW resistor: 1) NW resistor within OD, and 2) NW resistor under STI
+  bjtdmy: {number: 110, datatype: 0} # Cover BJT device
+  bjtdmy_1: {number: 110, datatype: 1} # LVS dummy layer for small BJT
+  hvd_n: {number: 91, datatype: 3} # Define HV NMOS drain side where sustains high voltage
+  hvd_p: {number: 91, datatype: 2} # Define HV PMOS drain side where sustains high voltage
+  #m0mdmy_1: {number: 155, datatype: 1}
+  #m0mdmy_2: {number: 155, datatype: 2}
+  #m0mdmy_3: {number: 155, datatype: 3}
+  #m0mdmy_4: {number: 155, datatype: 4}
+  #m0mdmy_5: {number: 155, datatype: 5}
+  #m0mdmy_6: {number: 155, datatype: 6}
+  #m0mdmy_7: {number: 155, datatype: 7}
+  #m0mdmy_8: {number: 155, datatype: 8}
+  #m0mdmy_9: {number: 155, datatype: 9}
+  #m0mdmy_ap: {number: 155, datatype: 20}
+  #rtm0mdmy: {number: 155, datatype: 21}
+  #ctmdmy: {number: 148, datatype: 0}
+  #ctmdmy_1: {number: 148, datatype: 10}
+  #indddmy_md: {number: 144, datatype: 37}
+  #indddmy_coil: {number: 144, datatype: 36}
+  #indddmy_hd: {number: 144, datatype: 38}
+  #indddmy: {number: 144, datatype: 0~14}
+  #rfdmy: {number: 161, datatype: 0}
+  #rfdmy_1: {number: 161, datatype: 10}
+  #odblk: {number: 150, datatype: 20}
+  #poblk: {number: 150, datatype: 21}
+  #dm1excl: {number: 150, datatype: 1}
+  #dm2excl: {number: 150, datatype: 2}
+  #dm3excl: {number: 150, datatype: 3}
+  #dm4excl: {number: 150, datatype: 4}
+  #dm5excl: {number: 150, datatype: 5}
+  #dm6excl: {number: 150, datatype: 6}
+  #dm7excl: {number: 150, datatype: 7}
+  #dm8excl: {number: 150, datatype: 8}
+  #dm9excl: {number: 150, datatype: 9}
+  #dtcd: {number: 165, datatype: 1}
+  #logo: {number: 158, datatype: 0}
+  #esd3: {number: 147, datatype: 0}
+  esdimp: {number: 111, datatype: 0} # TSMC 65 NM CMOS LOGIC LOW POWER HVMOS 1P9M SALICIDE CU_LOW K 1.2&2.5V AND HVMOS (D5G2.5) PROCESS QUALIFICATION REPORT- FAB12.
+  #vdddmy: {number: 255, datatype: 4}
+  #vssdmy: {number: 255, datatype: 5}
+  hia_dummy: {number: 168, datatype: 0}#dummy layer for high current diode
+}
