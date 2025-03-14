@@ -11,6 +11,15 @@ class Transistor(Component):
     
     def __init__(self, name, position, width, length, fingers=1, orientation=0, layer="active"):
         super().__init__(name, position, orientation)
+        
+        # Validate parameters
+        if width <= 0:
+            raise ValueError(f"Width must be positive, got {width}")
+        if length <= 0:
+            raise ValueError(f"Length must be positive, got {length}")
+        if fingers < 1:
+            raise ValueError(f"Number of fingers must be at least 1, got {fingers}")
+            
         self.width = width
         self.length = length
         self.fingers = fingers
@@ -21,10 +30,10 @@ class Transistor(Component):
         
     def _calculate_ports(self):
         """Calculate port positions based on transistor geometry"""
-        # Simplified port calculation
+        # Calculate base dimensions
         gate_width = self.width * self.fingers
         
-        # For a horizontal transistor:
+        # Calculate port positions - the orientation will be handled by the base class's get_port_position
         self.ports["source"] = [-gate_width/2, 0]
         self.ports["drain"] = [gate_width/2, 0]
         self.ports["gate"] = [0, -self.length/2]
