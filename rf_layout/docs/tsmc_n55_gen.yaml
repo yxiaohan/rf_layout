@@ -1,5 +1,6 @@
-name: tsmc_n65_gen
-description: "TSMC 65nm CMOS General Purpose Logic/MS_RF (extracted from T-N65-CL-DR-001)"
+name: tsmc_n55_gen
+description: "TSMC 55nm CMOS General Purpose Logic/MS_RF"
+
 rules:
   # Metal Layer Rules
   layer_metal1_min_width: 0.09
@@ -12,9 +13,7 @@ rules:
   layer_metal3_to_metal9_ultra_thick_min_spacing: 0.4
   layer_metal6_to_metal9_redistribution_min_width: 0.5
   layer_metal6_to_metal9_redistribution_min_spacing: 0.5
-  layer_metal4_to_metal9_cmn_min_width: 2.0
-  layer_metal4_to_metal9_cmn_min_spacing: 2.0
-  
+
   # Via Rules
   via_standard_min_size: 0.10
   via_standard_min_spacing: 0.10
@@ -22,12 +21,6 @@ rules:
   via_thick_min_spacing: 0.2
   via_ultra_thick_min_size: 0.36
   via_ultra_thick_min_spacing: 0.36
-  via_redistribution_min_size: 0.46
-  via_redistribution_min_spacing: 0.46
-  via_cmn_min_size: 0.36
-  via_cmn_min_spacing: 0.36
-  via_flipchip_min_size: 3
-  via_flipchip_min_spacing: 3
   
   # AP and AP-MD Rules
   ap_md_interconnection_width: 3
@@ -68,14 +61,6 @@ layers:
   metal8_rdl: {number: 388, datatype: 80}
   metal9_rdl: {number: 389, datatype: 80}
   
-  # Metal Layers - Common Mode (Mu)
-  metal4_cmn: {number: 384, datatype: 0}
-  metal5_cmn: {number: 385, datatype: 0}
-  metal6_cmn: {number: 386, datatype: 0}
-  metal7_cmn: {number: 387, datatype: 0}
-  metal8_cmn: {number: 388, datatype: 0}
-  metal9_cmn: {number: 389, datatype: 0}
-  
   # Via Layers - Standard
   via1: {number: 378, datatype: 0}
   via2: {number: 379, datatype: 0}
@@ -102,13 +87,6 @@ layers:
   via7_ultra: {number: 377, datatype: 40}
   via8_ultra: {number: 372, datatype: 40}
   
-  # Via Layers - Redistribution (VIAr)
-  via5_rdl: {number: 375, datatype: 80}
-  via6_rdl: {number: 376, datatype: 80}
-  via7_rdl: {number: 377, datatype: 80}
-  via8_rdl: {number: 372, datatype: 80}
-  
   # Special Layers
   ap: {number: 307, datatype: 74}
   ap_md: {number: 309, datatype: 74}
-  rv: {number: 306, datatype: 0}  # For flip chip
