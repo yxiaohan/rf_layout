@@ -11,9 +11,15 @@ class Component(ABC):
     
     def __init__(self, name, position, orientation=0):
         self.name = name
-        self.position = position  # [x, y]
-        self.orientation = orientation  # degrees
+        self.position = self._validate_position(position)
+        self.orientation = float(orientation)  # degrees
         self.ports = {}  # Dictionary to store port locations
+        
+    def _validate_position(self, position):
+        """Validate and convert position to proper format"""
+        if not isinstance(position, (list, tuple, np.ndarray)) or len(position) != 2:
+            raise ValueError(f"Position must be a 2D coordinate [x,y], got {position}")
+        return [float(position[0]), float(position[1])]
         
     @abstractmethod
     def generate_geometry(self):
@@ -26,6 +32,11 @@ class Component(ABC):
             raise ValueError(f"Port {port_name} not defined in component {self.name}")
         
         relative_pos = self.ports[port_name]
+        if not isinstance(relative_pos, (list, tuple, np.ndarray)) or len(relative_pos) != 2:
+            raise ValueError(f"Port position must be a 2D coordinate [x,y], got {relative_pos}")
+            
+        # Convert to numpy array for rotation
+        relative_pos = np.array([float(relative_pos[0]), float(relative_pos[1])])
         
         # Handle rotation based on orientation
         if self.orientation != 0:
@@ -38,8 +49,8 @@ class Component(ABC):
         
         # Calculate absolute position
         return [
-            self.position[0] + relative_pos[0], 
-            self.position[1] + relative_pos[1]
+            float(self.position[0] + relative_pos[0]), 
+            float(self.position[1] + relative_pos[1])
         ]
     
     def get_bounding_box(self):

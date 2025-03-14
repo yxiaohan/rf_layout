@@ -43,3 +43,10 @@ class RFICParser:
                 raise ValueError(f"Component {i} missing 'name' field")
             if 'position' not in comp:
                 raise ValueError(f"Component {i} missing 'position' field")
+            
+            # Validate parameters field is a dictionary
+            if 'parameters' in comp:
+                if not isinstance(comp['parameters'], dict):
+                    raise ValueError(f"Component {comp.get('name', i)} has invalid parameters - must be a dictionary/object")
+            else:
+                comp['parameters'] = {}  # Ensure parameters exists as empty dict if not provided

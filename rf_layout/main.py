@@ -79,8 +79,7 @@ class RFLayout:
             position = comp_data['position']
             orientation = comp_data.get('orientation', 0)
             
-            # Ensure parameters is a dictionary, default to empty dict if not present
-            # This fixes the 'float' object has no attribute 'get' error
+            # Ensure parameters is a dictionary
             params = comp_data.get('parameters', {})
             if not isinstance(params, dict):
                 print(f"Warning: parameters for {comp_name} is not a dictionary. Using default values.")
@@ -88,61 +87,65 @@ class RFLayout:
             
             # Create appropriate component based on type
             component = None
-            
-            if comp_type == 'nmos':
-                component = NMOS(
-                    comp_name, 
-                    position,
-                    params.get('width', 1.0),
-                    params.get('length', 0.1),
-                    params.get('fingers', 1),
-                    orientation,
-                    params.get('layer', 'active')
-                )
-            elif comp_type == 'pmos':
-                component = PMOS(
-                    comp_name, 
-                    position,
-                    params.get('width', 1.0),
-                    params.get('length', 0.1),
-                    params.get('fingers', 1),
-                    orientation,
-                    params.get('layer', 'active')
-                )
-            elif comp_type == 'inductor':
-                component = Inductor(
-                    comp_name,
-                    position,
-                    params.get('value', 1.0),
-                    params.get('turns', 4),
-                    params.get('width', 1.0),
-                    params.get('spacing', 0.5),
-                    params.get('layer', 'metal5'),
-                    orientation
-                )
-            elif comp_type == 'capacitor':
-                component = Capacitor(
-                    comp_name,
-                    position,
-                    params.get('value', 1.0),
-                    params.get('width', 5.0),
-                    params.get('length', 5.0),
-                    params.get('top_layer', 'metal5'),
-                    params.get('bot_layer', 'metal4'),
-                    orientation
-                )
-            elif comp_type == 'resistor':
-                component = Resistor(
-                    comp_name,
-                    position,
-                    params.get('value', 100.0),
-                    params.get('width', 1.0),
-                    params.get('length', 5.0),
-                    params.get('layer', 'poly'),
-                    orientation
-                )
-            else:
-                print(f"Warning: Unknown component type: {comp_type}")
+            try:
+                if comp_type == 'nmos':
+                    component = NMOS(
+                        comp_name, 
+                        position,
+                        float(params.get('width', 1.0)),
+                        float(params.get('length', 0.1)),
+                        int(params.get('fingers', 1)),
+                        orientation,
+                        params.get('layer', 'active')
+                    )
+                elif comp_type == 'pmos':
+                    component = PMOS(
+                        comp_name, 
+                        position,
+                        float(params.get('width', 1.0)),
+                        float(params.get('length', 0.1)),
+                        int(params.get('fingers', 1)),
+                        orientation,
+                        params.get('layer', 'active')
+                    )
+                elif comp_type == 'inductor':
+                    component = Inductor(
+                        comp_name,
+                        position,
+                        float(params.get('value', 1.0)),
+                        int(params.get('turns', 4)),
+                        float(params.get('width', 1.0)),
+                        float(params.get('spacing', 0.5)),
+                        params.get('layer', 'metal5'),
+                        orientation
+                    )
+                elif comp_type == 'capacitor':
+                    component = Capacitor(
+                        comp_name,
+                        position,
+                        float(params.get('value', 1.0)),
+                        float(params.get('width', 5.0)),
+                        float(params.get('length', 5.0)),
+                        params.get('top_layer', 'metal5'),
+                        params.get('bot_layer', 'metal4'),
+                        orientation
+                    )
+                elif comp_type == 'resistor':
+                    component = Resistor(
+                        comp_name,
+                        position,
+                        float(params.get('value', 100.0)),
+                        float(params.get('width', 1.0)),
+                        float(params.get('length', 5.0)),
+                        params.get('layer', 'poly'),
+                        orientation
+                    )
+                else:
+                    print(f"Warning: Unknown component type: {comp_type}")
+                    continue
+                    
+            except (TypeError, ValueError) as e:
+                print(f"Error creating component {comp_name}: {str(e)}. Using default values.")
                 continue
                 
             if component:
@@ -156,19 +159,23 @@ class RFLayout:
             return
             
         for conn_data in design_data['design']['connections']:
-            from_port = conn_data['from']
-            to_port = conn_data['to']
-            width = conn_data.get('width', 0.5)
-            layer = conn_data.get('layer', 'metal1')
-            strategy = conn_data.get('routing_strategy', 'manhattan')
-            
-            self.connections.append({
-                'from': from_port,
-                'to': to_port,
-                'width': width,
-                'layer': layer,
-                'strategy': strategy
-            })
+            try:
+                from_port = conn_data['from']
+                to_port = conn_data['to']
+                width = float(conn_data.get('width', 0.5))
+                layer = conn_data.get('layer', 'metal1')
+                strategy = conn_data.get('routing_strategy', 'manhattan')
+                
+                self.connections.append({
+                    'from': from_port,
+                    'to': to_port,
+                    'width': width,
+                    'layer': layer,
+                    'strategy': strategy
+                })
+            except (KeyError, ValueError, TypeError) as e:
+                print(f"Error processing connection: {str(e)}. Skipping.")
+                continue
     
     def place_components(self, auto_place=True, grid_size=None):
         """Handle component placement"""
