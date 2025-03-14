@@ -14,9 +14,9 @@ def run_tests():
     project_root = os.path.dirname(os.path.abspath(__file__))
     os.chdir(project_root)
     
-    # Install test dependencies if needed
-    print("Installing test dependencies...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "-e", ".[test]"])
+    # # Install test dependencies if needed
+    # print("Installing test dependencies...")
+    # subprocess.check_call([sys.executable, "-m", "pip", "install", "-e", ".[test]"])
     
     # Run tests with pytest
     print("\nRunning tests...")

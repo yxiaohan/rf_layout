@@ -13,7 +13,7 @@ from .layout.net_manager import NetManager
 from .layout.routing import Router
 from .layout.placement import Placement
 from .drc.checker import DRCChecker
-from .export.gds_export import GDSExporter
+from .export.gds_export import GDSWriter
 from .components.transistors import NMOS, PMOS
 from .components.passives import Inductor, Capacitor, Resistor
 
@@ -227,7 +227,7 @@ class RFLayout:
     def export_gds(self, output_path):
         """Export the design to GDSII format"""
         # Create GDS exporter
-        exporter = GDSExporter(self.design_name or "rf_layout_design")
+        exporter = GDSWriter(self.design_name or "rf_layout_design")
         
         # Add components
         exporter.add_components(self.components)

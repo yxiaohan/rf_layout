@@ -6,7 +6,7 @@ import gdspy
 import numpy as np
 import datetime
 
-class GDSExporter:
+class GDSWriter:
     """Handles export of RF Layout designs to GDSII format"""
     
     def __init__(self, design_name, unit=1.0e-6, precision=1.0e-9):
@@ -15,6 +15,7 @@ class GDSExporter:
         self.precision = precision  # Default is 1nm
         self.lib = None
         self.top_cell = None
+        self.layer_mapping = {}
         
     def initialize_lib(self):
         """Initialize new GDSII library"""
@@ -41,7 +42,7 @@ class GDSExporter:
         for route in routes:
             self.top_cell.add(route)
     
-    def export_gds(self, file_path):
+    def write_gds(self, file_path):
         """Export the design to a GDSII file"""
         if self.top_cell is None:
             raise ValueError("No design to export. Add components first.")
@@ -52,7 +53,7 @@ class GDSExporter:
     
     def export_with_viewer(self, file_path):
         """Export the design and open GDSII viewer"""
-        self.export_gds(file_path)
+        self.write_gds(file_path)
         
         # This would typically launch or integrate with a GDSII viewer
         # Simplified for this implementation
@@ -101,3 +102,11 @@ class GDSExporter:
             layer=99  # Special layer for border
         )
         self.top_cell.add(border)
+    
+    def add_routes(self, routes):
+        """Add routing paths to the top cell (alias for add_routing)"""
+        self.add_routing(routes)
+    
+    def set_layer_mapping(self, mapping):
+        """Set layer name to number mapping"""
+        self.layer_mapping = mapping.copy()
