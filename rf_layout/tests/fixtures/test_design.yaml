@@ -1,0 +1,45 @@
+design:
+  name: test_design
+  technology: CMOS_65nm
+  
+  components:
+    - type: nmos
+      name: M1
+      parameters:
+        width: 10
+        length: 0.18
+        fingers: 4
+      position: [100, 200]
+      orientation: 0
+    
+    - type: inductor
+      name: L1
+      parameters:
+        value: 2.4
+        turns: 4.5
+        width: 5
+        spacing: 2
+      position: [300, 300]
+      layer: metal5
+      
+    - type: capacitor
+      name: C1
+      parameters:
+        value: 1.0
+        width: 10
+        length: 10
+      position: [200, 100]
+      layer: metal1
+      
+  connections:
+    - from: M1.drain
+      to: L1.port1
+      width: 2
+      layer: metal3
+      routing_strategy: manhattan
+      
+    - from: L1.port2
+      to: C1.port1
+      width: 2
+      layer: metal3
+      routing_strategy: manhattan

@@ -1,0 +1,70 @@
+technology:
+  name: CMOS_65nm
+  units: microns
+  
+  layers:
+    metal1:
+      number: 1
+      datatype: 0
+      min_width: 0.1
+      min_spacing: 0.1
+    
+    metal2:
+      number: 2
+      datatype: 0
+      min_width: 0.1
+      min_spacing: 0.1
+    
+    metal3:
+      number: 3
+      datatype: 0
+      min_width: 0.3
+      min_spacing: 0.3
+      
+    metal4:
+      number: 4
+      datatype: 0
+      min_width: 0.3
+      min_spacing: 0.3
+      
+    metal5:
+      number: 5
+      datatype: 0
+      min_width: 0.5
+      min_spacing: 0.5
+      
+    poly:
+      number: 6
+      datatype: 0
+      min_width: 0.06
+      min_spacing: 0.14
+      
+    active:
+      number: 7
+      datatype: 0
+      min_width: 0.09
+      min_spacing: 0.12
+      
+  devices:
+    nmos:
+      min_length: 0.06
+      min_width: 0.12
+      min_fingers: 1
+      
+    pmos:
+      min_length: 0.06
+      min_width: 0.12
+      min_fingers: 1
+      
+    inductor:
+      min_width: 1.0
+      min_spacing: 1.0
+      min_turns: 1.5
+      
+    capacitor:
+      min_width: 0.5
+      min_length: 0.5
+      
+    resistor:
+      min_width: 0.1
+      min_length: 0.3

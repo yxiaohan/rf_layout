@@ -37,9 +37,26 @@ setup(
         "pyyaml>=5.1.0",
         "jsonschema>=3.2.0",
     ],
+    extras_require={
+        'test': [
+            'pytest>=7.0.0',
+            'pytest-cov>=4.0.0',
+            'pytest-mock>=3.10.0',
+        ],
+        'dev': [
+            'black',
+            'flake8',
+            'mypy',
+        ],
+    },
     entry_points={
         'console_scripts': [
             'rf_layout=rf_layout.main:main',
         ],
-    }
+    },
+    include_package_data=True,
+    package_data={
+        'rf_layout': ['tests/fixtures/*.yaml'],
+    },
+    test_suite='rf_layout.tests',
 )
