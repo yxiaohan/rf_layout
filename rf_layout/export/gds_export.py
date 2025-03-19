@@ -103,7 +103,7 @@ class GDSWriter:
     
     def write_gds(self, file_path):
         """Export the design to a GDSII file"""
-        if not self.top_cell:
+        if not self.top_cell or not self.top_cell.references:
             raise ValueError("No design to export. Add components first.")
             
         # Write the library to a file

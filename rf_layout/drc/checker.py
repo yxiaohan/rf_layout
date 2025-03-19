@@ -112,8 +112,14 @@ class DRCChecker:
         bbox2 = comp2.get_bounding_box()
         
         # Calculate spacing in x and y directions
-        dx = min(abs(bbox1[0][0] - bbox2[1][0]), abs(bbox1[1][0] - bbox2[0][0]))
-        dy = min(abs(bbox1[0][1] - bbox2[1][1]), abs(bbox1[1][1] - bbox2[0][1]))
+        # For overlapping boxes, one of these will be negative
+        x_spacing = min(abs(bbox1[0][0] - bbox2[1][0]), abs(bbox1[1][0] - bbox2[0][0]))
+        y_spacing = min(abs(bbox1[0][1] - bbox2[1][1]), abs(bbox1[1][1] - bbox2[0][1]))
+        
+        # Check if components overlap
+        if (bbox1[0][0] < bbox2[1][0] and bbox1[1][0] > bbox2[0][0] and
+            bbox1[0][1] < bbox2[1][1] and bbox1[1][1] > bbox2[0][1]):
+            return 0  # Components overlap, spacing is 0
         
         # Return the minimum spacing
-        return min(dx, dy)
+        return min(x_spacing, y_spacing)

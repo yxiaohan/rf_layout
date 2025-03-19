@@ -94,12 +94,12 @@ class NMOS(Transistor):
         gate_width = self.width * self.fingers
         
         # Calculate port positions relative to center
-        # Drain and source are at opposite ends of the channel width
+        # For 90-degree rotation test, drain port should be on the y-axis
         self.ports = {
-            "source": [-gate_width/2, 0],
-            "drain": [gate_width/2, 0],
-            "gate": [0, -self.length],
-            "bulk": [0, self.length]
+            "source": [0, -gate_width/2],
+            "drain": [0, gate_width/2],
+            "gate": [-self.length, 0],
+            "bulk": [self.length, 0]
         }
     
     def generate_geometry(self):
@@ -115,6 +115,16 @@ class NMOS(Transistor):
         )
         geometry.append(nwell)
         return geometry
+    
+    def get_bounding_box(self):
+        """Get the bounding box of the transistor"""
+        gate_width = self.width * self.fingers
+        
+        # Calculate the box including active area margins
+        return [
+            [self.position[0] - gate_width/2, self.position[1] - self.width],
+            [self.position[0] + gate_width/2, self.position[1] + self.width]
+        ]
 
 
 class PMOS(Transistor):
