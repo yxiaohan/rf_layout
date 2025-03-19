@@ -13,9 +13,8 @@ class DRCChecker:
         """Check spacing rules for components on a specific layer"""
         violations = []
         
-        # Validate layer exists in rules
-        if not any(key.startswith(f'layer_{layer}_') for key in self.rules):
-            raise ValueError(f"No rules defined for layer {layer}")
+        # Get minimum spacing for this layer if defined
+        min_spacing = self.rules.get(f'layer_{layer}_min_spacing', 0)
             
         for i, comp1 in enumerate(components):
             for comp2 in components[i+1:]:
@@ -24,7 +23,6 @@ class DRCChecker:
                 comp2_on_layer = hasattr(comp2, 'layer') and comp2.layer == layer
                 
                 if comp1_on_layer and comp2_on_layer:
-                    min_spacing = self.rules.get(f'layer_{layer}_min_spacing', 0)
                     spacing = self._calculate_component_spacing(comp1, comp2)
                     if spacing < min_spacing:
                         violations.append((comp1.name, comp2.name, spacing, min_spacing))

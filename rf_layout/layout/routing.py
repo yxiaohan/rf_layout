@@ -8,7 +8,8 @@ import numpy as np
 class Router:
     """Advanced router for connecting component ports"""
     
-    def __init__(self, tech_rules=None):
+    def __init__(self, net_manager=None, tech_rules=None):
+        self.net_manager = net_manager
         self.tech_rules = tech_rules or {}
         
     def route(self, from_pos, to_pos, width, layer, strategy='manhattan'):
@@ -146,3 +147,20 @@ class Router:
         )
         
         return [shorter_route, longer_route]
+    
+    def generate_routes(self, strategy='manhattan'):
+        """Generate routes for all nets in the net manager using specified strategy"""
+        if not self.net_manager:
+            return []
+            
+        routes = []
+        for connection in self.net_manager.connections:
+            from_pos = self.net_manager.get_port_position(connection['from_port'])
+            to_pos = self.net_manager.get_port_position(connection['to_port'])
+            width = connection.get('width', 1.0)
+            layer = connection.get('layer', 'metal1')
+            
+            route = self.route(from_pos, to_pos, width, layer, strategy)
+            routes.append(route)
+            
+        return routes

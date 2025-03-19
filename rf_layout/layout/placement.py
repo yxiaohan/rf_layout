@@ -10,6 +10,7 @@ class Placement:
     def __init__(self, components):
         self.components = components
         self.placement_grid = None
+        self.constraints = {}  # Store placement constraints by component name
         
     def set_grid(self, grid_size, origin=(0,0)):
         """Set placement grid size and origin"""
@@ -78,7 +79,7 @@ class Placement:
             # Move to next row
             current_y += row_height + spacing
     
-    def detect_overlaps(self):
+    def check_overlaps(self):
         """Detect overlapping components"""
         overlaps = []
         
@@ -98,7 +99,7 @@ class Placement:
     
     def resolve_overlaps(self, spacing=5):
         """Attempt to resolve component overlaps"""
-        overlaps = self.detect_overlaps()
+        overlaps = self.check_overlaps()
         
         while overlaps:
             # Get first overlapping pair
@@ -134,8 +135,58 @@ class Placement:
             comp2.position[1] += vec_y * move_dist
             
             # Check for remaining overlaps
-            overlaps = self.detect_overlaps()
+            overlaps = self.check_overlaps()
             
         # Optional: snap to grid after resolving overlaps
         if self.placement_grid:
             self.snap_all_to_grid()
+    
+    def move_component(self, component_name, new_position):
+        """Move a component to a new position"""
+        # Find component by name
+        component = next((c for c in self.components if c.name == component_name), None)
+        if not component:
+            raise ValueError(f"Component {component_name} not found")
+            
+        # Check if move respects constraints
+        constraints = self.constraints.get(component_name, {})
+        if constraints:
+            if 'min_x' in constraints and new_position[0] < constraints['min_x']:
+                new_position[0] = constraints['min_x']
+            if 'max_x' in constraints and new_position[0] > constraints['max_x']:
+                new_position[0] = constraints['max_x']
+            if 'min_y' in constraints and new_position[1] < constraints['min_y']:
+                new_position[1] = constraints['min_y']
+            if 'max_y' in constraints and new_position[1] > constraints['max_y']:
+                new_position[1] = constraints['max_y']
+                
+        # Update component position
+        component.position = [float(new_position[0]), float(new_position[1])]
+        
+        # Snap to grid if enabled
+        if self.placement_grid:
+            self.snap_to_grid(component)
+            
+    def add_constraint(self, component, min_x=None, max_x=None, min_y=None, max_y=None):
+        """Add placement constraints for a component"""
+        if not any(c.name == component for c in self.components):
+            raise ValueError(f"Component {component} not found")
+            
+        # Initialize constraints for this component if not exist
+        if component not in self.constraints:
+            self.constraints[component] = {}
+            
+        # Add the constraints
+        if min_x is not None:
+            self.constraints[component]['min_x'] = float(min_x)
+        if max_x is not None:
+            self.constraints[component]['max_x'] = float(max_x)
+        if min_y is not None:
+            self.constraints[component]['min_y'] = float(min_y)
+        if max_y is not None:
+            self.constraints[component]['max_y'] = float(max_y)
+            
+        # Validate current position against new constraints
+        comp = next(c for c in self.components if c.name == component)
+        current_pos = comp.position
+        self.move_component(component, current_pos)  # This will enforce the constraints

@@ -46,6 +46,7 @@ class Component(ABC):
         # Handle rotation based on orientation
         if self.orientation != 0:
             angle = np.radians(self.orientation)
+            # Create rotation matrix for counter-clockwise rotation
             rot_matrix = np.array([
                 [np.cos(angle), -np.sin(angle)],
                 [np.sin(angle), np.cos(angle)]
@@ -60,9 +61,36 @@ class Component(ABC):
         
     def get_bounding_box(self):
         """Get the bounding box of the component"""
-        # Default implementation - should be overridden by complex components
-        # This is a placeholder that assumes the component occupies a 1x1 unit box
+        # Get rotated corner points
+        points = []
+        bbox = [
+            [self.position[0] - 0.5, self.position[1] - 0.5],  # Bottom left
+            [self.position[0] + 0.5, self.position[1] - 0.5],  # Bottom right
+            [self.position[0] - 0.5, self.position[1] + 0.5],  # Top left
+            [self.position[0] + 0.5, self.position[1] + 0.5]   # Top right
+        ]
+        
+        if self.orientation != 0:
+            angle = np.radians(self.orientation)
+            rot_matrix = np.array([
+                [np.cos(angle), -np.sin(angle)],
+                [np.sin(angle), np.cos(angle)]
+            ])
+            
+            # Rotate each corner point
+            center = np.array(self.position)
+            for point in bbox:
+                # Translate to origin, rotate, then translate back
+                vec = np.array(point) - center
+                rotated = np.dot(rot_matrix, vec)
+                points.append(rotated + center)
+        else:
+            points = bbox
+            
+        # Calculate bounding box of rotated points
+        x_coords = [p[0] for p in points]
+        y_coords = [p[1] for p in points]
         return [
-            [self.position[0] - 0.5, self.position[1] - 0.5],
-            [self.position[0] + 0.5, self.position[1] + 0.5]
+            [min(x_coords), min(y_coords)],
+            [max(x_coords), max(y_coords)]
         ]

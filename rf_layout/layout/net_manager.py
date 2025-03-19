@@ -11,6 +11,19 @@ class NetManager:
     def __init__(self, components):
         self.components = {comp.name: comp for comp in components}
         self.nets = {}  # Dictionary of nets (connections)
+    
+    @property
+    def connections(self):
+        """Get list of connections in router-friendly format"""
+        return [
+            {
+                'from_port': f"{net['from']['component'].name}.{net['from']['port']}",
+                'to_port': f"{net['to']['component'].name}.{net['to']['port']}",
+                'width': net['width'],
+                'layer': net['layer']
+            }
+            for net in self.nets.values()
+        ]
         
     def add_connection(self, from_port, to_port, width, layer):
         """Add a connection between two ports"""

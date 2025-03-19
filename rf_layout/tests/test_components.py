@@ -79,7 +79,7 @@ class TestComponents(unittest.TestCase):
             NMOS("test", [0, 0], width=-1, length=0.18)
             
         with self.assertRaises(ValueError):
-            Inductor("test", [0, 0], value=-2.5, turns=4)
+            Inductor("test", [0, 0], value=-2.5, turns=4, width=5, spacing=2)
             
         with self.assertRaises(ValueError):
             Capacitor("test", [0, 0], value=-1.0, width=10, length=10)
