@@ -115,7 +115,7 @@ class NMOS(Transistor):
              self.position[1] - self.width/2),
             (self.position[0] + gate_width/2 + self.length, 
              self.position[1] + self.width/2),
-            layer=1  # Active layer (will be mapped by GDSWriter)
+            layer=1  # Active layer
         )
         geometry.append(active)
         
@@ -127,7 +127,7 @@ class NMOS(Transistor):
                  self.position[1] - self.width),
                 (self.position[0] + offset + self.length, 
                  self.position[1] + self.width),
-                layer=2  # Poly layer (will be mapped by GDSWriter)
+                layer=2  # Poly layer
             )
             geometry.append(gate)
             
@@ -137,11 +137,16 @@ class NMOS(Transistor):
              self.position[1] - self.width * 1.2),
             (self.position[0] + gate_width/2 + self.length, 
              self.position[1] + self.width * 1.2),
-            layer=3  # Metal layer (will be mapped by GDSWriter)
+            layer=3  # Metal layer
         )
         geometry.append(nwell)
         
-        return geometry
+        # Create a cell for this component
+        cell = gdspy.Cell(self.name)
+        for element in geometry:
+            cell.add(element)
+            
+        return cell
     
     def get_bounding_box(self):
         """Get the bounding box of the transistor"""

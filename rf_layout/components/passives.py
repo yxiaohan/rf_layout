@@ -52,11 +52,7 @@ class Inductor(Component):
         cell = gdspy.Cell(self.name)
         
         # Create a simplified spiral inductor using polylines
-        # In a real implementation, this would be more sophisticated
         points = []
-        
-        # Determine layer number for the metal layer
-        layer_num = int(self.layer.replace("metal", ""))
         
         # Generate a square spiral
         size = self.outer_size
@@ -71,7 +67,7 @@ class Inductor(Component):
         spiral = gdspy.FlexPath(
             points, 
             self.width, 
-            layer=layer_num,
+            layer=5,  # Use numeric layer, will be mapped by GDSWriter
             corners="round"
         )
         cell.add(spiral)
@@ -120,15 +116,11 @@ class Capacitor(Component):
         """Generate GDSII geometry for the capacitor"""
         cell = gdspy.Cell(self.name)
         
-        # Determine layer numbers
-        top_layer_num = int(self.top_layer.replace("metal", ""))
-        bot_layer_num = int(self.bot_layer.replace("metal", ""))
-        
         # Create top plate
         top_plate = gdspy.Rectangle(
             (self.position[0] - self.width/2, self.position[1] - self.length/2),
             (self.position[0] + self.width/2, self.position[1] + self.length/2),
-            layer=top_layer_num
+            layer=5  # Use numeric layer for top metal
         )
         cell.add(top_plate)
         
@@ -137,7 +129,7 @@ class Capacitor(Component):
         bot_plate = gdspy.Rectangle(
             (self.position[0] - self.width/2 + margin, self.position[1] - self.length/2 + margin),
             (self.position[0] + self.width/2 - margin, self.position[1] + self.length/2 - margin),
-            layer=bot_layer_num
+            layer=4  # Use numeric layer for bottom metal
         )
         cell.add(bot_plate)
         
@@ -180,7 +172,8 @@ class Resistor(Component):
     
     def generate_geometry(self):
         """Generate geometry primitives for the resistor"""
-        geometry = []
+        # Create a cell for this component
+        cell = gdspy.Cell(self.name)
         
         # Create resistor body
         path = gdspy.FlexPath(
@@ -189,7 +182,7 @@ class Resistor(Component):
             self.width,
             layer=1  # Metal1 layer
         )
-        geometry.append(path)
+        cell.add(path)
         
         # Add contacts at ends
         contact_size = self.width * 1.5
@@ -199,9 +192,9 @@ class Resistor(Component):
                 (x + contact_size/2, self.position[1] + contact_size/2),
                 layer=2  # Contact layer
             )
-            geometry.append(contact)
+            cell.add(contact)
             
-        return geometry
+        return cell
         
     def get_bounding_box(self):
         """Get the bounding box of the resistor"""

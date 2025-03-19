@@ -68,7 +68,7 @@ class NetManager:
         component = self.components[comp_name]
         return component.get_port_position(port_name)
         
-    def generate_routing(self):
+    def generate_routing(self, strategy=None):
         """Generate routing paths for all connections"""
         routes = []
         
@@ -82,11 +82,8 @@ class NetManager:
             if start_pos is None or end_pos is None:
                 continue  # Skip invalid connections
                 
-            # Create path points - for now just direct connection
-            points = [
-                (start_pos[0], start_pos[1]),
-                (end_pos[0], end_pos[1])
-            ]
+            # Create path points - adjust based on strategy if provided
+            points = self._generate_route_points(start_pos, end_pos, strategy)
             
             # Create route as FlexPath
             route = gdspy.FlexPath(
@@ -98,6 +95,22 @@ class NetManager:
             routes.append(route)
             
         return routes
+        
+    def _generate_route_points(self, start_pos, end_pos, strategy=None):
+        """Generate routing points based on strategy"""
+        if strategy == "manhattan":
+            # Generate L-shaped manhattan route
+            return [
+                (start_pos[0], start_pos[1]),
+                (start_pos[0], end_pos[1]),
+                (end_pos[0], end_pos[1])
+            ]
+        else:
+            # Default to direct route
+            return [
+                (start_pos[0], start_pos[1]),
+                (end_pos[0], end_pos[1])
+            ]
     
     def check_routing_conflicts(self):
         """Check for conflicts between routes"""
