@@ -179,47 +179,36 @@ class Resistor(Component):
         self.ports["port2"] = [self.length/2, 0]
     
     def generate_geometry(self):
-        """Generate GDSII geometry for the resistor"""
-        cell = gdspy.Cell(self.name)
-        
-        # Handle different layer types
-        if self.layer == "poly":
-            layer_num = 2
-        elif self.layer.startswith("metal"):
-            layer_num = int(self.layer.replace("metal", ""))
-        else:
-            layer_num = 3  # Default high-resistivity layer
+        """Generate geometry primitives for the resistor"""
+        geometry = []
         
         # Create resistor body
-        resistor_body = gdspy.Rectangle(
-            (self.position[0] - self.length/2, self.position[1] - self.width/2),
-            (self.position[0] + self.length/2, self.position[1] + self.width/2),
-            layer=layer_num
+        path = gdspy.FlexPath(
+            [(self.position[0] - self.length/2, self.position[1]),
+             (self.position[0] + self.length/2, self.position[1])],
+            self.width,
+            layer=1  # Metal1 layer
         )
-        cell.add(resistor_body)
+        geometry.append(path)
         
-        # Add contact regions at the ends (simplified)
-        contact_width = min(self.width * 1.5, self.length * 0.4)
+        # Add contacts at ends
+        contact_size = self.width * 1.5
+        for x in [self.position[0] - self.length/2, self.position[0] + self.length/2]:
+            contact = gdspy.Rectangle(
+                (x - contact_size/2, self.position[1] - contact_size/2),
+                (x + contact_size/2, self.position[1] + contact_size/2),
+                layer=2  # Contact layer
+            )
+            geometry.append(contact)
+            
+        return geometry
         
-        left_contact = gdspy.Rectangle(
-            (self.position[0] - self.length/2, self.position[1] - contact_width/2),
-            (self.position[0] - self.length/2 + contact_width, self.position[1] + contact_width/2),
-            layer=layer_num  # Use same layer for contacts in metal version
-        )
-        cell.add(left_contact)
-        
-        right_contact = gdspy.Rectangle(
-            (self.position[0] + self.length/2 - contact_width, self.position[1] - contact_width/2),
-            (self.position[0] + self.length/2, self.position[1] + contact_width/2),
-            layer=layer_num  # Use same layer for contacts in metal version
-        )
-        cell.add(right_contact)
-        
-        return cell
-    
     def get_bounding_box(self):
         """Get the bounding box of the resistor"""
+        contact_size = self.width * 1.5
         return [
-            [self.position[0] - self.length/2, self.position[1] - self.width/2],
-            [self.position[0] + self.length/2, self.position[1] + self.width/2]
+            [self.position[0] - self.length/2 - contact_size/2, 
+             self.position[1] - contact_size/2],
+            [self.position[0] + self.length/2 + contact_size/2, 
+             self.position[1] + contact_size/2]
         ]

@@ -54,6 +54,14 @@ class GDSWriter:
         
         return self.lib
     
+    def _map_layer(self, primitive):
+        """Map layer name to number if needed"""
+        if hasattr(primitive, 'layer'):
+            if isinstance(primitive.layer, str):
+                if primitive.layer in self.layer_mapping:
+                    primitive.layer = self.layer_mapping[primitive.layer]
+        return primitive
+        
     def add_components(self, components):
         """Add multiple components to the top cell"""
         if not components:
@@ -70,16 +78,26 @@ class GDSWriter:
                 geometry = component.generate_geometry()
                 if not isinstance(geometry, (list, tuple)):
                     geometry = [geometry]
-                    
+                
                 # Create cell for the component with unique name
                 cell_name = self._get_unique_cell_name(component.name)
                 cell = gdspy.Cell(cell_name)
-                # Add to library with overwrite=True to handle duplicates
-                self.lib.add(cell, overwrite_duplicate=True)
                 
-                # Add geometry primitives to the cell
+                # Map layers and add geometry primitives to the cell
                 for primitive in geometry:
-                    cell.add(primitive)
+                    if primitive is not None:
+                        if isinstance(primitive, gdspy.Cell):
+                            # If primitive is a cell, recurse through its polygons
+                            for poly in primitive.polygons:
+                                mapped_poly = self._map_layer(poly)
+                                cell.add(mapped_poly)
+                        else:
+                            # Map layer and add primitive
+                            mapped_primitive = self._map_layer(primitive)
+                            cell.add(mapped_primitive)
+                
+                # Add cell to library
+                self.lib.add(cell, overwrite_duplicate=True)
                 
                 # Create reference in top cell
                 ref = gdspy.CellReference(
@@ -167,8 +185,35 @@ class GDSWriter:
         self.top_cell.add(border)
     
     def add_routes(self, routes):
-        """Add routing paths to the top cell (alias for add_routing)"""
-        self.add_routing(routes)
+        """Add routing paths to the top cell"""
+        if not routes:
+            return
+            
+        if not self.top_cell:
+            self.initialize_lib()
+            
+        # Ensure we're using our library
+        prev_lib = gdspy.current_library
+        gdspy.current_library = self.lib
+        
+        try:
+            # Create a cell for routes
+            route_cell = gdspy.Cell(self._get_unique_cell_name("routes"))
+            self.lib.add(route_cell, overwrite_duplicate=True)
+            
+            # Add each route to the cell
+            for route in routes:
+                if hasattr(route, 'layer') and isinstance(route.layer, str):
+                    # Map layer name to number if needed
+                    if route.layer in self.layer_mapping:
+                        route.layer = self.layer_mapping[route.layer]
+                route_cell.add(route)
+            
+            # Add route cell reference to top cell
+            ref = gdspy.CellReference(route_cell)
+            self.top_cell.add(ref)
+        finally:
+            gdspy.current_library = prev_lib
     
     def set_layer_mapping(self, mapping):
         """Set layer name to number mapping"""

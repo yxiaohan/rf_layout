@@ -68,76 +68,36 @@ class NetManager:
         component = self.components[comp_name]
         return component.get_port_position(port_name)
         
-    def generate_routing(self, routing_strategy='manhattan'):
-        """Generate routing for all nets"""
+    def generate_routing(self):
+        """Generate routing paths for all connections"""
         routes = []
         
-        for net_id, net_info in self.nets.items():
-            from_pos = net_info['from']['component'].get_port_position(
-                net_info['from']['port']
-            )
-            to_pos = net_info['to']['component'].get_port_position(
-                net_info['to']['port']
-            )
+        for conn in self.connections:
+            # Extract connection details
+            start_pos = self.get_port_position(conn['from_port'])
+            end_pos = self.get_port_position(conn['to_port'])
+            width = conn.get('width', 1.0)
+            layer = conn.get('layer', 'metal1')
             
-            # Generate route based on strategy
-            if routing_strategy == 'manhattan':
-                route = self._manhattan_route(
-                    from_pos, to_pos, net_info['width'], net_info['layer']
-                )
-            elif routing_strategy == 'direct':
-                route = self._direct_route(
-                    from_pos, to_pos, net_info['width'], net_info['layer']
-                )
-            else:
-                raise ValueError(f"Unknown routing strategy: {routing_strategy}")
+            if start_pos is None or end_pos is None:
+                continue  # Skip invalid connections
                 
+            # Create path points - for now just direct connection
+            points = [
+                (start_pos[0], start_pos[1]),
+                (end_pos[0], end_pos[1])
+            ]
+            
+            # Create route as FlexPath
+            route = gdspy.FlexPath(
+                points,
+                width=width,
+                layer=layer,  # Use layer name, will be mapped by GDSWriter
+                corners="round"  # Use rounded corners for better manufacturability
+            )
             routes.append(route)
             
         return routes
-    
-    def _manhattan_route(self, from_pos, to_pos, width, layer):
-        """Generate Manhattan (L-shaped) routing"""
-        # Create path points for L-shaped route
-        path = [
-            from_pos,
-            [to_pos[0], from_pos[1]],  # Horizontal segment
-            to_pos
-        ]
-        
-        # Determine layer number
-        if isinstance(layer, str) and layer.startswith("metal"):
-            layer_num = int(layer.replace("metal", ""))
-        else:
-            layer_num = layer
-        
-        # Create GDSII path object
-        route = gdspy.FlexPath(
-            path, 
-            width, 
-            layer=layer_num, 
-            corners='miter'
-        )
-        
-        return route
-        
-    def _direct_route(self, from_pos, to_pos, width, layer):
-        """Generate direct (straight line) routing"""
-        path = [from_pos, to_pos]
-        
-        # Determine layer number
-        if isinstance(layer, str) and layer.startswith("metal"):
-            layer_num = int(layer.replace("metal", ""))
-        else:
-            layer_num = layer
-        
-        route = gdspy.FlexPath(
-            path, 
-            width, 
-            layer=layer_num
-        )
-        
-        return route
     
     def check_routing_conflicts(self):
         """Check for conflicts between routes"""

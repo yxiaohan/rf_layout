@@ -104,16 +104,43 @@ class NMOS(Transistor):
     
     def generate_geometry(self):
         """Generate geometry primitives for the NMOS transistor"""
-        geometry = super().generate_geometry()
+        geometry = []
+        
+        # Calculate dimensions based on parameters
+        gate_width = self.width * self.fingers
+        
+        # Create active area (simplified rectangle)
+        active = gdspy.Rectangle(
+            (self.position[0] - gate_width/2 - self.length, 
+             self.position[1] - self.width/2),
+            (self.position[0] + gate_width/2 + self.length, 
+             self.position[1] + self.width/2),
+            layer=1  # Active layer (will be mapped by GDSWriter)
+        )
+        geometry.append(active)
+        
+        # Create gate(s)
+        for i in range(self.fingers):
+            offset = -gate_width/2 + i * self.width * 2
+            gate = gdspy.Rectangle(
+                (self.position[0] + offset, 
+                 self.position[1] - self.width),
+                (self.position[0] + offset + self.length, 
+                 self.position[1] + self.width),
+                layer=2  # Poly layer (will be mapped by GDSWriter)
+            )
+            geometry.append(gate)
+            
         # Add NMOS-specific geometry (e.g., n-well)
         nwell = gdspy.Rectangle(
-            (self.position[0] - self.width * self.fingers - self.length, 
+            (self.position[0] - gate_width/2 - self.length, 
              self.position[1] - self.width * 1.2),
-            (self.position[0] + self.width * self.fingers + self.length, 
+            (self.position[0] + gate_width/2 + self.length, 
              self.position[1] + self.width * 1.2),
-            layer=3  # N-well layer
+            layer=3  # Metal layer (will be mapped by GDSWriter)
         )
         geometry.append(nwell)
+        
         return geometry
     
     def get_bounding_box(self):

@@ -111,10 +111,14 @@ class TestGDSExport(unittest.TestCase):
         for ref in top_cell.references:
             cell = ref.ref_cell
             # Get all polygons from the cell with their layer info
-            for polygon_dict in cell.get_polygons(by_spec=True):
-                for layer_spec in polygon_dict:
-                    # Layer spec is a tuple of (layer, datatype)
-                    layers_used.add(layer_spec[0])
+            by_spec = cell.get_polygons(by_spec=True)
+            if isinstance(by_spec, dict):  # GDSPY 8.x format
+                for layer_spec in by_spec.keys():
+                    layers_used.add(layer_spec[0])  # layer number from tuple
+            else:  # numpy array format
+                for polygon in by_spec:
+                    if hasattr(polygon, 'dtype') and 'layer' in polygon.dtype.names:
+                        layers_used.add(polygon['layer'])
         
         # Should have at least one layer mapped
         self.assertGreater(len(layers_used), 0)
