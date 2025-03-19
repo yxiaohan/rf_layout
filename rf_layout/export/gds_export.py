@@ -19,12 +19,18 @@ class GDSWriter:
         
         # Initialize library immediately to ensure it's the current one
         self.initialize_lib()
+    
+    def _update_current_lib(self):
+        """Set this library as the current GDSPY library"""
+        prev_lib = gdspy.current_library
+        gdspy.current_library = self.lib
+        return prev_lib
         
     def _get_unique_cell_name(self, base_name):
-        """Generate a unique cell name by adding a suffix if needed"""
+        """Generate unique cell name by adding suffix if needed"""
         if base_name not in self._cell_counter:
             self._cell_counter[base_name] = 0
-            return base_name
+            return f"{base_name}_0"
         
         self._cell_counter[base_name] += 1
         return f"{base_name}_{self._cell_counter[base_name]}"
@@ -37,39 +43,45 @@ class GDSWriter:
             unit=self.unit,
             precision=self.precision
         )
-        # Set as current library to avoid conflicts
+        
+        # Clear any existing library to avoid conflicts
         gdspy.current_library = self.lib
         
-        # Create top cell with unique name
-        self.top_cell = self.lib.new_cell(self._get_unique_cell_name(self.design_name))
+        # Create top cell
+        top_cell_name = self._get_unique_cell_name(self.design_name)
+        self.top_cell = gdspy.Cell(top_cell_name)
+        self.lib.add(self.top_cell, overwrite_duplicate=True)
+        
         return self.lib
     
     def add_components(self, components):
         """Add multiple components to the top cell"""
         if not components:
-            return
+            raise ValueError("No components provided")
             
         # Ensure we're using our library
         prev_lib = gdspy.current_library
         gdspy.current_library = self.lib
         
         try:
-            # Add each component's geometry to the top cell
+            # Add each component's geometry
             for component in components:
                 # Generate component geometry
                 geometry = component.generate_geometry()
                 if not isinstance(geometry, (list, tuple)):
                     geometry = [geometry]
                     
-                # Create cell for the component with a unique name
+                # Create cell for the component with unique name
                 cell_name = self._get_unique_cell_name(component.name)
-                cell = self.lib.new_cell(cell_name)
+                cell = gdspy.Cell(cell_name)
+                # Add to library with overwrite=True to handle duplicates
+                self.lib.add(cell, overwrite_duplicate=True)
                 
                 # Add geometry primitives to the cell
                 for primitive in geometry:
                     cell.add(primitive)
                 
-                # Create reference in top cell with proper orientation
+                # Create reference in top cell
                 ref = gdspy.CellReference(
                     cell,
                     origin=component.position,

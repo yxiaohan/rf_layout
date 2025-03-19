@@ -35,6 +35,12 @@ class NetManager:
         if to_comp not in self.components:
             raise ValueError(f"Component {to_comp} not found")
             
+        # Validate ports exist
+        if from_port_name not in self.components[from_comp].ports:
+            raise ValueError(f"Port {from_port_name} not found in component {from_comp}")
+        if to_port_name not in self.components[to_comp].ports:
+            raise ValueError(f"Port {to_port_name} not found in component {to_comp}")
+        
         # Create net ID
         net_id = f"{from_port}_to_{to_port}"
         
@@ -52,6 +58,16 @@ class NetManager:
             'layer': layer
         }
     
+    def get_port_position(self, port_spec):
+        """Get absolute position of a port specified as 'component.port_name'"""
+        comp_name, port_name = port_spec.split('.')
+        
+        if comp_name not in self.components:
+            raise ValueError(f"Component {comp_name} not found")
+            
+        component = self.components[comp_name]
+        return component.get_port_position(port_name)
+        
     def generate_routing(self, routing_strategy='manhattan'):
         """Generate routing for all nets"""
         routes = []

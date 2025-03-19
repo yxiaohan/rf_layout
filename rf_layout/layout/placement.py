@@ -151,14 +151,11 @@ class Placement:
         # Check if move respects constraints
         constraints = self.constraints.get(component_name, {})
         if constraints:
-            if 'min_x' in constraints and new_position[0] < constraints['min_x']:
-                new_position[0] = constraints['min_x']
-            if 'max_x' in constraints and new_position[0] > constraints['max_x']:
-                new_position[0] = constraints['max_x']
-            if 'min_y' in constraints and new_position[1] < constraints['min_y']:
-                new_position[1] = constraints['min_y']
-            if 'max_y' in constraints and new_position[1] > constraints['max_y']:
-                new_position[1] = constraints['max_y']
+            if ('min_x' in constraints and new_position[0] < constraints['min_x']) or \
+               ('max_x' in constraints and new_position[0] > constraints['max_x']) or \
+               ('min_y' in constraints and new_position[1] < constraints['min_y']) or \
+               ('max_y' in constraints and new_position[1] > constraints['max_y']):
+                raise ValueError(f"Position {new_position} violates constraints for component {component_name}")
                 
         # Update component position
         component.position = [float(new_position[0]), float(new_position[1])]

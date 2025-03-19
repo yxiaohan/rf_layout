@@ -84,9 +84,23 @@ class Transistor(Component):
 class NMOS(Transistor):
     """NMOS transistor implementation"""
     
-    def __init__(self, name, position, width, length, fingers=1, orientation=0, layer="active"):
+    def __init__(self, name, position, width, length, fingers=1, orientation=0, layer="metal1"):
         super().__init__(name, position, width, length, fingers, orientation, layer)
         self.device_type = "nmos"
+        
+    def _calculate_ports(self):
+        """Calculate port positions based on transistor geometry"""
+        # Calculate base dimensions
+        gate_width = self.width * self.fingers
+        
+        # Calculate port positions relative to center
+        # Drain and source are at opposite ends of the channel width
+        self.ports = {
+            "source": [-gate_width/2, 0],
+            "drain": [gate_width/2, 0],
+            "gate": [0, -self.length],
+            "bulk": [0, self.length]
+        }
     
     def generate_geometry(self):
         """Generate geometry primitives for the NMOS transistor"""

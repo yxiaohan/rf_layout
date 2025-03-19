@@ -6,47 +6,40 @@ import yaml
 from jsonschema import validate
 
 class RFICParser:
-    def __init__(self, schema_file=None):
-        self.schema = None
-        if schema_file:
-            with open(schema_file, 'r') as f:
-                self.schema = yaml.safe_load(f)
+    """Parser for RFIC YAML design files"""
     
-    def parse(self, yaml_file):
-        """Parse and validate YAML file against schema"""
-        with open(yaml_file, 'r') as file:
-            data = yaml.safe_load(file)
+    def __init__(self, schema_validator=None):
+        self.schema_validator = schema_validator
+        self.valid_component_types = {
+            'nmos', 'pmos', 'capacitor', 'resistor', 'inductor'
+        }
         
-        # Validate against schema if available
-        if self.schema:
-            validate(instance=data, schema=self.schema)
+    def parse_design(self, yaml_file):
+        """Parse RFIC design from YAML file"""
+        with open(yaml_file, 'r') as f:
+            design = yaml.safe_load(f)
             
-        # Additional custom validation
-        self._validate_design(data)
-        
-        return data
-    
-    def _validate_design(self, data):
-        """Perform custom design validation"""
-        if 'design' not in data:
-            raise ValueError("Invalid YAML: 'design' section missing")
+        # Validate required top-level fields
+        if 'design' not in design:
+            raise ValueError("Missing required 'design' section")
+            
+        if 'technology' not in design['design']:
+            raise ValueError("Missing required 'technology' field")
+            
+        if 'components' not in design['design']:
+            raise ValueError("Missing required 'components' section")
             
         # Validate components
-        if 'components' not in data['design']:
-            raise ValueError("Invalid YAML: 'components' section missing")
-            
-        # Check for required fields in each component
-        for i, comp in enumerate(data['design']['components']):
-            if 'type' not in comp:
-                raise ValueError(f"Component {i} missing 'type' field")
-            if 'name' not in comp:
-                raise ValueError(f"Component {i} missing 'name' field")
-            if 'position' not in comp:
-                raise ValueError(f"Component {i} missing 'position' field")
-            
-            # Validate parameters field is a dictionary
-            if 'parameters' in comp:
-                if not isinstance(comp['parameters'], dict):
-                    raise ValueError(f"Component {comp.get('name', i)} has invalid parameters - must be a dictionary/object")
-            else:
-                comp['parameters'] = {}  # Ensure parameters exists as empty dict if not provided
+        for component in design['design']['components']:
+            if 'type' not in component:
+                raise ValueError(f"Component missing required 'type' field: {component}")
+            if 'name' not in component:
+                raise ValueError(f"Component missing required 'name' field: {component}")
+            if component['type'].lower() not in self.valid_component_types:
+                raise ValueError(f"Unknown component type: {component['type']}")
+                
+        return design['design']
+    
+    def parse(self, yaml_file):
+        """Parse RFIC design from YAML file (alias for parse_design)"""
+        return self.parse_design(yaml_file)

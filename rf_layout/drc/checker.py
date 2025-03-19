@@ -6,15 +6,16 @@ class DRCChecker:
     """Handles design rule checking for RF Layout designs"""
     
     def __init__(self, rules=None):
-        """Initialize DRC checker with optional rules"""
         self.rules = rules or {}
-    
+        
     def check_spacing(self, components, layer):
         """Check spacing rules for components on a specific layer"""
         violations = []
+        min_spacing = self.rules.get(f'layer_{layer}_min_spacing')
         
-        # Get minimum spacing for this layer if defined
-        min_spacing = self.rules.get(f'layer_{layer}_min_spacing', 0)
+        # Force validation of layer existence
+        if min_spacing is None:
+            raise ValueError(f"No spacing rules defined for layer {layer}")
             
         for i, comp1 in enumerate(components):
             for comp2 in components[i+1:]:
@@ -32,14 +33,18 @@ class DRCChecker:
     def check_width(self, components, layer):
         """Check width rules for components on a specific layer"""
         violations = []
+        min_width = self.rules.get(f'layer_{layer}_min_width')
         
-        min_width = self.rules.get(f'layer_{layer}_min_width', 0)
+        # Force validation of layer existence
+        if min_width is None:
+            raise ValueError(f"No width rules defined for layer {layer}")
         
         for component in components:
-            if hasattr(component, 'width') and hasattr(component, 'layer'):
-                # Check if component is on the specified layer
-                if component.layer == layer and component.width < min_width:
-                    violations.append((component.name, component.width, min_width))
+            if hasattr(component, 'layer') and component.layer == layer:
+                # For width check, the component must have a width attribute
+                if hasattr(component, 'width'):
+                    if component.width < min_width:
+                        violations.append((component.name, component.width, min_width))
         
         return violations
     
@@ -55,20 +60,24 @@ class DRCChecker:
         
         # Check each layer
         for layer in layers:
-            # Check component rules
-            component_violations = self.check_width(components, layer)
-            violations.extend(component_violations)
-            
-            # Check spacing rules
-            spacing_violations = self.check_spacing(components, layer)
-            violations.extend(spacing_violations)
+            try:
+                # Check component rules
+                component_violations = self.check_width(components, layer)
+                violations.extend(component_violations)
+                
+                # Check spacing rules
+                spacing_violations = self.check_spacing(components, layer)
+                violations.extend(spacing_violations)
+            except ValueError as e:
+                # Log the error but continue checking other layers
+                print(f"Warning: {str(e)}")
         
         # Check routing rules
         routing_violations = self._check_routing(routes)
         violations.extend(routing_violations)
         
         return violations
-    
+        
     def _check_routing(self, routes):
         """Check routing paths against design rules"""
         violations = []
@@ -81,9 +90,11 @@ class DRCChecker:
             layer_name = f"metal{layer}" if isinstance(layer, int) else str(layer)
             
             # Check width rules
-            min_width_rule = self.rules.get(f'layer_{layer_name}_min_width', 0)
+            min_width_rule = self.rules.get(f'layer_{layer_name}_min_width')
+            if min_width_rule is None:
+                continue  # Skip if no rules for this layer
+                
             width = getattr(route, 'width', 1)
-            
             if width < min_width_rule:
                 violations.append({
                     'route': f'route_{i}',

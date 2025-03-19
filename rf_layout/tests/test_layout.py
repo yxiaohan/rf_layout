@@ -62,13 +62,22 @@ class TestLayout(unittest.TestCase):
         self.assertGreater(len(routes), 0)
         # Check if route connects the correct components
         route = routes[0]
-        start_point = route.path[0]
-        end_point = route.path[-1]
+        # Get points directly from FlexPath
+        path_points = route.points
+        start_point = path_points[0]  # First point
+        end_point = path_points[-1]  # Last point
         
-        # Verify start point is near M1's drain
-        drain_pos = self.nmos.get_port_position("drain")
-        self.assertAlmostEqual(start_point[0], drain_pos[0], places=2)
-        self.assertAlmostEqual(start_point[1], drain_pos[1], places=2)
+        # Verify route endpoints match port positions
+        self.assertAlmostEqual(
+            start_point[0], 
+            net_mgr.get_port_position("M1.drain")[0], 
+            places=6
+        )
+        self.assertAlmostEqual(
+            end_point[0], 
+            net_mgr.get_port_position("R1.port1")[0], 
+            places=6
+        )
 
     def test_invalid_routing(self):
         net_mgr = NetManager(self.components)

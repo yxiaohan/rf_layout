@@ -23,73 +23,64 @@ class Component(ABC):
     
     @abstractmethod
     def generate_geometry(self):
-        """Generate geometry primitives for the component.
-        
-        This should return a list of GDSPY geometry primitives (Rectangle, Path, etc.)
-        rather than creating a cell directly. The GDSWriter will handle cell creation
-        and naming.
-        """
+        """Generate geometry primitives for the component"""
         pass
-        
+    
     def get_port_position(self, port_name):
-        """Get absolute position of a port"""
+        """Get absolute position of a port including rotation"""
         if port_name not in self.ports:
             raise ValueError(f"Port {port_name} not defined in component {self.name}")
-        
-        relative_pos = self.ports[port_name]
-        if not isinstance(relative_pos, (list, tuple, np.ndarray)) or len(relative_pos) != 2:
-            raise ValueError(f"Port position must be a 2D coordinate [x,y], got {relative_pos}")
+            
+        # Get relative port position
+        rel_pos = self.ports[port_name]
+        if not isinstance(rel_pos, (list, tuple, np.ndarray)) or len(rel_pos) != 2:
+            raise ValueError(f"Port position must be a 2D coordinate [x,y], got {rel_pos}")
             
         # Convert to numpy array for rotation
-        relative_pos = np.array([float(relative_pos[0]), float(relative_pos[1])])
+        rel_pos = np.array([float(rel_pos[0]), float(rel_pos[1])])
         
-        # Handle rotation based on orientation
+        # Rotate relative position if orientation is not 0
         if self.orientation != 0:
-            angle = np.radians(self.orientation)
-            # Create rotation matrix for counter-clockwise rotation
+            angle = np.radians(-self.orientation)  # Negative angle for clockwise rotation
             rot_matrix = np.array([
                 [np.cos(angle), -np.sin(angle)],
                 [np.sin(angle), np.cos(angle)]
             ])
-            relative_pos = np.dot(rot_matrix, relative_pos)
+            rel_pos = np.dot(rot_matrix, rel_pos)
         
-        # Calculate absolute position by adding the rotated relative position to component position
-        return [
-            float(self.position[0] + relative_pos[0]),
-            float(self.position[1] + relative_pos[1])
+        # Add rotated relative position to component position
+        final_pos = [
+            self.position[0] + rel_pos[0],
+            self.position[1] + rel_pos[1]
         ]
-        
+        return final_pos
+    
     def get_bounding_box(self):
-        """Get the bounding box of the component"""
-        # Get rotated corner points
-        points = []
-        bbox = [
-            [self.position[0] - 0.5, self.position[1] - 0.5],  # Bottom left
-            [self.position[0] + 0.5, self.position[1] - 0.5],  # Bottom right
-            [self.position[0] - 0.5, self.position[1] + 0.5],  # Top left
-            [self.position[0] + 0.5, self.position[1] + 0.5]   # Top right
+        """Get the bounding box of the component including rotation"""
+        # Default implementation - override in subclasses for more accurate bounds
+        size = 1.0  # Default size if not specified by subclass
+        corners = [
+            [-size/2, -size/2],
+            [size/2, -size/2],
+            [-size/2, size/2],
+            [size/2, size/2]
         ]
         
+        # Rotate corners if orientation is not 0
         if self.orientation != 0:
             angle = np.radians(self.orientation)
             rot_matrix = np.array([
                 [np.cos(angle), -np.sin(angle)],
                 [np.sin(angle), np.cos(angle)]
             ])
-            
-            # Rotate each corner point
-            center = np.array(self.position)
-            for point in bbox:
-                # Translate to origin, rotate, then translate back
-                vec = np.array(point) - center
-                rotated = np.dot(rot_matrix, vec)
-                points.append(rotated + center)
-        else:
-            points = bbox
-            
-        # Calculate bounding box of rotated points
-        x_coords = [p[0] for p in points]
-        y_coords = [p[1] for p in points]
+            corners = [np.dot(rot_matrix, np.array(corner)) for corner in corners]
+        
+        # Translate corners to component position
+        corners = [[c[0] + self.position[0], c[1] + self.position[1]] for c in corners]
+        
+        # Calculate bounds
+        x_coords = [c[0] for c in corners]
+        y_coords = [c[1] for c in corners]
         return [
             [min(x_coords), min(y_coords)],
             [max(x_coords), max(y_coords)]

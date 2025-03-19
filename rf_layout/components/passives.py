@@ -154,7 +154,7 @@ class Capacitor(Component):
 class Resistor(Component):
     """Resistor component implementation"""
     
-    def __init__(self, name, position, value, width, length, layer="poly", orientation=0):
+    def __init__(self, name, position, value, width, length, layer="metal1", orientation=0):
         super().__init__(name, position, orientation)
         
         # Validate parameters
@@ -182,11 +182,13 @@ class Resistor(Component):
         """Generate GDSII geometry for the resistor"""
         cell = gdspy.Cell(self.name)
         
-        # Determine layer number - for poly or high-res layers
+        # Handle different layer types
         if self.layer == "poly":
             layer_num = 2
+        elif self.layer.startswith("metal"):
+            layer_num = int(self.layer.replace("metal", ""))
         else:
-            layer_num = 3  # Placeholder for high-resistivity layer
+            layer_num = 3  # Default high-resistivity layer
         
         # Create resistor body
         resistor_body = gdspy.Rectangle(
@@ -202,14 +204,14 @@ class Resistor(Component):
         left_contact = gdspy.Rectangle(
             (self.position[0] - self.length/2, self.position[1] - contact_width/2),
             (self.position[0] - self.length/2 + contact_width, self.position[1] + contact_width/2),
-            layer=layer_num + 1  # Contact layer
+            layer=layer_num  # Use same layer for contacts in metal version
         )
         cell.add(left_contact)
         
         right_contact = gdspy.Rectangle(
             (self.position[0] + self.length/2 - contact_width, self.position[1] - contact_width/2),
             (self.position[0] + self.length/2, self.position[1] + contact_width/2),
-            layer=layer_num + 1  # Contact layer
+            layer=layer_num  # Use same layer for contacts in metal version
         )
         cell.add(right_contact)
         
