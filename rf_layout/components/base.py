@@ -20,10 +20,15 @@ class Component(ABC):
         if not isinstance(position, (list, tuple, np.ndarray)) or len(position) != 2:
             raise ValueError(f"Position must be a 2D coordinate [x,y], got {position}")
         return [float(position[0]), float(position[1])]
-        
+    
     @abstractmethod
     def generate_geometry(self):
-        """Generate GDSII geometry for the component"""
+        """Generate geometry primitives for the component.
+        
+        This should return a list of GDSPY geometry primitives (Rectangle, Path, etc.)
+        rather than creating a cell directly. The GDSWriter will handle cell creation
+        and naming.
+        """
         pass
         
     def get_port_position(self, port_name):
@@ -52,7 +57,7 @@ class Component(ABC):
             float(self.position[0] + relative_pos[0]),
             float(self.position[1] + relative_pos[1])
         ]
-
+        
     def get_bounding_box(self):
         """Get the bounding box of the component"""
         # Default implementation - should be overridden by complex components

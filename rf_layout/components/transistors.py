@@ -40,9 +40,8 @@ class Transistor(Component):
         self.ports["bulk"] = [0, self.length/2]
         
     def generate_geometry(self):
-        """Generate GDSII geometry for the transistor"""
-        # Create a new GDSII cell for this transistor
-        cell = gdspy.Cell(self.name)
+        """Generate geometry primitives for the transistor"""
+        geometry = []
         
         # Calculate dimensions based on parameters
         gate_width = self.width * self.fingers
@@ -55,7 +54,7 @@ class Transistor(Component):
              self.position[1] + self.width/2),
             layer=1  # Active layer
         )
-        cell.add(active)
+        geometry.append(active)
         
         # Create gate(s)
         for i in range(self.fingers):
@@ -67,9 +66,9 @@ class Transistor(Component):
                  self.position[1] + self.width),
                 layer=2  # Poly layer
             )
-            cell.add(gate)
+            geometry.append(gate)
             
-        return cell
+        return geometry
     
     def get_bounding_box(self):
         """Get the bounding box of the transistor"""
@@ -90,10 +89,18 @@ class NMOS(Transistor):
         self.device_type = "nmos"
     
     def generate_geometry(self):
-        """Generate GDSII geometry for the NMOS transistor"""
-        cell = super().generate_geometry()
+        """Generate geometry primitives for the NMOS transistor"""
+        geometry = super().generate_geometry()
         # Add NMOS-specific geometry (e.g., n-well)
-        return cell
+        nwell = gdspy.Rectangle(
+            (self.position[0] - self.width * self.fingers - self.length, 
+             self.position[1] - self.width * 1.2),
+            (self.position[0] + self.width * self.fingers + self.length, 
+             self.position[1] + self.width * 1.2),
+            layer=3  # N-well layer
+        )
+        geometry.append(nwell)
+        return geometry
 
 
 class PMOS(Transistor):
@@ -104,7 +111,15 @@ class PMOS(Transistor):
         self.device_type = "pmos"
     
     def generate_geometry(self):
-        """Generate GDSII geometry for the PMOS transistor"""
-        cell = super().generate_geometry()
+        """Generate geometry primitives for the PMOS transistor"""
+        geometry = super().generate_geometry()
         # Add PMOS-specific geometry (e.g., p-well)
-        return cell
+        pwell = gdspy.Rectangle(
+            (self.position[0] - self.width * self.fingers - self.length, 
+             self.position[1] - self.width * 1.2),
+            (self.position[0] + self.width * self.fingers + self.length, 
+             self.position[1] + self.width * 1.2),
+            layer=4  # P-well layer
+        )
+        geometry.append(pwell)
+        return geometry

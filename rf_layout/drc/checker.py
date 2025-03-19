@@ -8,59 +8,66 @@ class DRCChecker:
     def __init__(self, rules=None):
         """Initialize DRC checker with optional rules"""
         self.rules = rules or {}
+    
+    def check_spacing(self, components, layer):
+        """Check spacing rules for components on a specific layer"""
+        violations = []
         
+        # Validate layer exists in rules
+        if not any(key.startswith(f'layer_{layer}_') for key in self.rules):
+            raise ValueError(f"No rules defined for layer {layer}")
+            
+        for i, comp1 in enumerate(components):
+            for comp2 in components[i+1:]:
+                # Check if both components are on the specified layer
+                comp1_on_layer = hasattr(comp1, 'layer') and comp1.layer == layer
+                comp2_on_layer = hasattr(comp2, 'layer') and comp2.layer == layer
+                
+                if comp1_on_layer and comp2_on_layer:
+                    min_spacing = self.rules.get(f'layer_{layer}_min_spacing', 0)
+                    spacing = self._calculate_component_spacing(comp1, comp2)
+                    if spacing < min_spacing:
+                        violations.append((comp1.name, comp2.name, spacing, min_spacing))
+        
+        return violations
+    
+    def check_width(self, components, layer):
+        """Check width rules for components on a specific layer"""
+        violations = []
+        
+        min_width = self.rules.get(f'layer_{layer}_min_width', 0)
+        
+        for component in components:
+            if hasattr(component, 'width') and hasattr(component, 'layer'):
+                # Check if component is on the specified layer
+                if component.layer == layer and component.width < min_width:
+                    violations.append((component.name, component.width, min_width))
+        
+        return violations
+    
     def run_all_checks(self, components, routes):
         """Run all DRC checks on components and routing"""
         violations = []
         
-        # Check component rules
-        component_violations = self._check_components(components)
-        violations.extend(component_violations)
+        # Get all layers used in components
+        layers = set()
+        for comp in components:
+            if hasattr(comp, 'layer'):
+                layers.add(comp.layer)
+        
+        # Check each layer
+        for layer in layers:
+            # Check component rules
+            component_violations = self.check_width(components, layer)
+            violations.extend(component_violations)
+            
+            # Check spacing rules
+            spacing_violations = self.check_spacing(components, layer)
+            violations.extend(spacing_violations)
         
         # Check routing rules
         routing_violations = self._check_routing(routes)
         violations.extend(routing_violations)
-        
-        # Check component-to-component spacing
-        spacing_violations = self._check_component_spacing(components)
-        violations.extend(spacing_violations)
-        
-        return violations
-    
-    def _check_components(self, components):
-        """Check components against design rules"""
-        violations = []
-        
-        for component in components:
-            # Get component type
-            comp_type = component.__class__.__name__.lower()
-            
-            # Check rules specific to component types
-            if comp_type == 'transistor' or comp_type == 'nmos' or comp_type == 'pmos':
-                # Check transistor rules (width, length, etc.)
-                min_length_rule = self.rules.get('transistor_min_length', 0.1)
-                if hasattr(component, 'length') and component.length < min_length_rule:
-                    violations.append({
-                        'component': component.name,
-                        'rule': 'transistor_min_length',
-                        'value': component.length,
-                        'limit': min_length_rule,
-                        'message': f"Transistor {component.name} length ({component.length}) is less than minimum ({min_length_rule})"
-                    })
-            
-            # Check appropriate layer rules for all components
-            if hasattr(component, 'layer'):
-                layer_name = component.layer
-                min_width_rule = self.rules.get(f'layer_{layer_name}_min_width', 0)
-                
-                if hasattr(component, 'width') and component.width < min_width_rule:
-                    violations.append({
-                        'component': component.name,
-                        'rule': f'layer_{layer_name}_min_width',
-                        'value': component.width,
-                        'limit': min_width_rule,
-                        'message': f"Component {component.name} width ({component.width}) on layer {layer_name} is less than minimum ({min_width_rule})"
-                    })
         
         return violations
     
@@ -69,102 +76,35 @@ class DRCChecker:
         violations = []
         
         for i, route in enumerate(routes):
-            # Extract layer from route (assuming routes have a layer attribute)
+            # Extract layer from route
             layer = getattr(route, 'layer', 0)
-            layer_name = None
             
-            # Convert layer number to name if possible
-            if isinstance(layer, int):
-                # Try to find layer name from number
-                for name, props in self.rules.items():
-                    if name.startswith('layer_') and props.get('number') == layer:
-                        layer_name = name.replace('layer_', '')
-                        break
+            # For integer layers, try to find corresponding rules directly
+            layer_name = f"metal{layer}" if isinstance(layer, int) else str(layer)
             
-            # If we have a layer name, check width rules
-            if layer_name:
-                min_width_rule = self.rules.get(f'layer_{layer_name}_min_width', 0)
-                width = getattr(route, 'width', 1)
-                
-                if width < min_width_rule:
-                    violations.append({
-                        'route': f'route_{i}',
-                        'rule': f'layer_{layer_name}_min_width',
-                        'value': width,
-                        'limit': min_width_rule,
-                        'message': f"Route width ({width}) on layer {layer_name} is less than minimum ({min_width_rule})"
-                    })
+            # Check width rules
+            min_width_rule = self.rules.get(f'layer_{layer_name}_min_width', 0)
+            width = getattr(route, 'width', 1)
+            
+            if width < min_width_rule:
+                violations.append({
+                    'route': f'route_{i}',
+                    'rule': f'layer_{layer_name}_min_width',
+                    'value': width,
+                    'limit': min_width_rule,
+                    'message': f"Route width ({width}) on layer {layer_name} is less than minimum ({min_width_rule})"
+                })
         
         return violations
     
-    def _check_component_spacing(self, components):
-        """Check spacing between components"""
-        violations = []
+    def _calculate_component_spacing(self, comp1, comp2):
+        """Calculate the minimum spacing between two components"""
+        bbox1 = comp1.get_bounding_box()
+        bbox2 = comp2.get_bounding_box()
         
-        # Check each pair of components
-        for i, comp1 in enumerate(components):
-            for j, comp2 in enumerate(components[i+1:], i+1):
-                # Get bounding boxes
-                bbox1 = comp1.get_bounding_box()
-                bbox2 = comp2.get_bounding_box()
-                
-                # Calculate separation
-                x_overlap = (bbox1[0][0] < bbox2[1][0] and bbox1[1][0] > bbox2[0][0])
-                y_overlap = (bbox1[0][1] < bbox2[1][1] and bbox1[1][1] > bbox2[0][1])
-                
-                # If components overlap in both dimensions, they're too close
-                if x_overlap and y_overlap:
-                    violations.append({
-                        'component1': comp1.name,
-                        'component2': comp2.name,
-                        'rule': 'component_overlap',
-                        'message': f"Components {comp1.name} and {comp2.name} overlap"
-                    })
-                    continue
-                
-                # Calculate minimum required spacing
-                min_spacing = 0
-                
-                # If components have layers, check layer-specific spacing
-                if hasattr(comp1, 'layer') and hasattr(comp2, 'layer'):
-                    layer1, layer2 = comp1.layer, comp2.layer
-                    spacing_rule = self.rules.get(f'layer_{layer1}_to_{layer2}_spacing')
-                    
-                    if not spacing_rule:
-                        # Try reverse ordering
-                        spacing_rule = self.rules.get(f'layer_{layer2}_to_{layer1}_spacing')
-                    
-                    if spacing_rule:
-                        min_spacing = spacing_rule
-                
-                # If no specific layer rule, use default spacing
-                if min_spacing == 0:
-                    min_spacing = self.rules.get('default_component_spacing', 1.0)
-                
-                # Calculate actual spacing
-                if x_overlap:
-                    # Components overlap in x dimension, check y spacing
-                    spacing = min(abs(bbox1[0][1] - bbox2[1][1]), abs(bbox1[1][1] - bbox2[0][1]))
-                    if spacing < min_spacing:
-                        violations.append({
-                            'component1': comp1.name,
-                            'component2': comp2.name,
-                            'rule': 'min_component_spacing',
-                            'value': spacing,
-                            'limit': min_spacing,
-                            'message': f"Spacing between {comp1.name} and {comp2.name} ({spacing}) is less than minimum ({min_spacing})"
-                        })
-                elif y_overlap:
-                    # Components overlap in y dimension, check x spacing
-                    spacing = min(abs(bbox1[0][0] - bbox2[1][0]), abs(bbox1[1][0] - bbox2[0][0]))
-                    if spacing < min_spacing:
-                        violations.append({
-                            'component1': comp1.name,
-                            'component2': comp2.name,
-                            'rule': 'min_component_spacing',
-                            'value': spacing,
-                            'limit': min_spacing,
-                            'message': f"Spacing between {comp1.name} and {comp2.name} ({spacing}) is less than minimum ({min_spacing})"
-                        })
+        # Calculate spacing in x and y directions
+        dx = min(abs(bbox1[0][0] - bbox2[1][0]), abs(bbox1[1][0] - bbox2[0][0]))
+        dy = min(abs(bbox1[0][1] - bbox2[1][1]), abs(bbox1[1][1] - bbox2[0][1]))
         
-        return violations
+        # Return the minimum spacing
+        return min(dx, dy)
